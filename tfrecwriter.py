@@ -24,8 +24,8 @@ def load_audio(audio):
                     desired_channels=1,  # mono
                     desired_samples= 48000 * 5)
     
-    # x = raw_audio.sample_rate.numpy()
-    return raw_audio.audio
+    raw_audio = tf.audio.encode_wav(raw_audio.audio, raw_audio.sample_rate)
+    return raw_audio
 
 def load_labels(labels):
     string_tensor = tf.constant(labels)
@@ -33,17 +33,17 @@ def load_labels(labels):
 
 
 
-def createDataRecord(out_filename, addrs, labels, especie_id, punto_id, length, matrix, rate, is_tp):
+def createDataRecord(out_filename, recording_id, audio, labels):
     # open the TFRecords file
     writer = tf.io.TFRecordWriter(out_filename)
-    for i in range(len(addrs)):
+    for i in range(len(audio)):
         # print how many images are saved every 1000 images
         #if i is a multiple of 100 then print the number
         if not i % 100:
             print('Writing to tfrec\t' + str(i) )
             sys.stdout.flush()
         # Load the image
-        wav = load_audio(addrs[i])
+        wav = load_audio(audio[i])
 
         
         
@@ -55,14 +55,9 @@ def createDataRecord(out_filename, addrs, labels, especie_id, punto_id, length, 
         # print(_bytes_feature(b'test_string'))
         # print(_bytes_feature(u'test_bytes'.encode('utf-8')))
         feature = {
-            'label': _int64_feature(labels[i]),
-            'audio_wav': _float32_feature(wav.numpy().flatten().tolist()),
-            'species_id': _int64_feature(especie_id[i]),
-            'punto_id': _int64_feature(punto_id[i]),
-            'length': _int64_feature(length[i]),
-            'matrix': _float32_feature(matrix[i]),
-            'rate': _float32_feature(rate[i]),
-            'is_tp': _int64_feature(is_tp[i])
+            'audio_wav': _bytes_feature(wav),
+            'label_info': _bytes_feature(labels[i].encode('utf-8')),
+            'recording_id': _bytes_feature(recording_id[i].encode('utf-8'))
             
         }
         # Create an example protocol buffer
@@ -97,27 +92,17 @@ matrix = matrix.tolist()
 rate = rate.tolist()
 is_tp = 0
 #list 
-labels = []
+label_info = []
 
 print(len(audio_paths))
-for i in range(666):
-    audio_paths[i] = os.path.join(os.path.abspath('./grabaciones5seg'), audio_paths[i])
-    #convert scalar to vector
-    recording_id[i] = [recording_id[i]]
-    recording_id[i] = np.array(recording_id[i])
-    especie_id[i] = [especie_id[i]]
-    especie_id[i] = np.array(especie_id[i])
-    punto_id[i] = [punto_id[i]]
-    punto_id[i] = np.array(punto_id[i])
-    length[i] = [length[i]]
-    length[i] = np.array(length[i])
-    matrix[i] = [matrix[i]]
-    matrix[i] = np.array(matrix[i])
-    rate[i] = [rate[i]]
-    rate[i] = np.array(rate[i])
-    is_tp = [[1]]
-    is_tp = np.array(is_tp)
 
     
 
-createDataRecord('finalonemaybe.tfrec', recording_id, audio_paths, label_info )
+for i in range(666):
+    audio_paths[i] = os.path.join(os.path.abspath('./grabaciones5seg'), audio_paths[i])
+    label_info_data = "\"" + str(especie_id[i]) + "," + str(punto_id[i]) + "," + "0" + """\"" + "\n"
+    label_info.append(label_info_data)
+    recording_id[i] = str(recording_id[i])
+    
+print (label_info)
+createDataRecord('finalonehopefully.tfrec', recording_id, audio_paths, label_info)
