@@ -72,20 +72,33 @@
 # wave.write("track3.wav",sample_rate, track3)
 # wave.write("track4.wav",sample_rate, track4)
 
+# from scipy.io import wavfile
+# from scipy.signal import butter, lfilter
+
+# # Load the wav file
+# sample_rate, data = wavfile.read('000316da7.wav')
+
+# # Apply a low-pass filter to the data
+# cutoff = 6000  # Cutoff frequency in Hz
+# b, a = butter(5, cutoff / (sample_rate / 2), 'low')
+# filtered_data = lfilter(b, a, data)
+
+# # Save the filtered data as a new wav file
+# wavfile.write('output.wav', sample_rate, filtered_data)
+
+
+
 from scipy.io import wavfile
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, filtfilt
 
 # Load the wav file
 sample_rate, data = wavfile.read('000316da7.wav')
 
-# Apply a low-pass filter to the data
-cutoff = 6000  # Cutoff frequency in Hz
-b, a = butter(5, cutoff / (sample_rate / 2), 'low')
-filtered_data = lfilter(b, a, data)
+# Apply a band-pass filter to the data
+low = 12000  # Lower cutoff frequency in Hz
+high = 18000  # Upper cutoff frequency in Hz
+b, a = butter(5, [low / (sample_rate / 2), high / (sample_rate / 2)], 'bandpass')
+filtered_data = filtfilt(b, a, data)
 
 # Save the filtered data as a new wav file
 wavfile.write('output.wav', sample_rate, filtered_data)
-
-
-
-
